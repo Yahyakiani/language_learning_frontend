@@ -7,40 +7,35 @@
 
 import React, { useState } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
-import { Button, MD2DarkTheme, Provider as PaperProvider } from 'react-native-paper';
+import {  MD2DarkTheme, Provider as PaperProvider } from 'react-native-paper';
 // import AudioRecorderComponent from './components/AudioRecorder';
 // import PlaybackComponent from './components/PlaybackComponent';
 // import ApiResponseDisplay from './components/ApiResponseDisplay';
 import theme from './styles/globalStyles'; // Assume this contains the theme as described previously
-import { sendRecordingToApi } from './api/ApiClient';
 import AudioRecorderComponent from './components/AudioRecorder';
 import PlaybackComponent from './components/PlaybackComponent';
+import SentenceDisplayComponent from './components/SentenceDisplayComponent';
 1
 const App = () => {
   const [audioPath, setAudioPath] = useState('');
-  const [apiResponse, setApiResponse] = useState(null);
+  const [currentSentence, setCurrentSentence] = useState('');
 
   const handleRecordingComplete = (path) => {
     setAudioPath(path);
   };
 
-  const handleSendRecording = async () => {
-    // This function would send the recording to an API and update the state with the response
-    // Placeholder for API client usage
-    const response = await sendRecordingToApi(audioPath);
-    setApiResponse(response);
-  };
+  
 
   return (
-    <PaperProvider theme={theme}>
+    <PaperProvider theme={MD2DarkTheme}>
       <View style={styles.container}>
-        <Text style={styles.welcomeText}>Welcome to Our Voice App!</Text>
-        <AudioRecorderComponent onRecordingComplete={handleRecordingComplete} />
+        <Text style={styles.welcomeText}>Welcome to Our Reading Learning App!</Text>
+        <SentenceDisplayComponent
+        currentSentence={currentSentence}
+        setCurrentSentence={setCurrentSentence}
+         />
+        <AudioRecorderComponent onRecordingComplete={handleRecordingComplete} currentSentence={currentSentence} />
         {audioPath ? <PlaybackComponent audioPath={audioPath} /> : null}
-        <Button mode="contained" onPress={handleSendRecording} disabled={!audioPath} style={styles.button}>
-          Send Recording
-        </Button>
-        {/* {apiResponse && <ApiResponseDisplay response={apiResponse} />} */}
       </View>
     </PaperProvider>
   );
