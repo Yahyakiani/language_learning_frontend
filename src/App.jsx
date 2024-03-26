@@ -1,61 +1,59 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { MD2DarkTheme, Provider as PaperProvider } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import React, { useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import {  MD2DarkTheme, Provider as PaperProvider } from 'react-native-paper';
-// import AudioRecorderComponent from './components/AudioRecorder';
-// import PlaybackComponent from './components/PlaybackComponent';
-// import ApiResponseDisplay from './components/ApiResponseDisplay';
-import theme from './styles/globalStyles'; // Assume this contains the theme as described previously
-import AudioRecorderComponent from './components/AudioRecorder';
-import PlaybackComponent from './components/PlaybackComponent';
-import SentenceDisplayComponent from './components/SentenceDisplayComponent';
-1
+import HomeScreen from './screens/HomeScreen';
+import RecordScreen from './screens/RecordScreen';
+import ResultsScreen from './screens/ResultScreen';
+
+const Tab = createBottomTabNavigator();
+
 const App = () => {
-  const [audioPath, setAudioPath] = useState('');
-  const [currentSentence, setCurrentSentence] = useState('');
-
-  const handleRecordingComplete = (path) => {
-    setAudioPath(path);
-  };
-
-  
-
   return (
     <PaperProvider theme={MD2DarkTheme}>
-      <View style={styles.container}>
-        <Text style={styles.welcomeText}>Welcome to Our Reading Learning App!</Text>
-        <SentenceDisplayComponent
-        currentSentence={currentSentence}
-        setCurrentSentence={setCurrentSentence}
-         />
-        <AudioRecorderComponent onRecordingComplete={handleRecordingComplete} currentSentence={currentSentence} />
-        {audioPath ? <PlaybackComponent audioPath={audioPath} /> : null}
-      </View>
+      <NavigationContainer>
+        <Tab.Navigator
+          initialRouteName="Home"
+          screenOptions={{
+            tabBarActiveTintColor: '#e91e63',
+          }}
+        >
+          <Tab.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{
+              tabBarLabel: 'Home',
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="home" color={color} size={size} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Record"
+            component={RecordScreen}
+            options={{
+              tabBarLabel: 'Record',
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="microphone" color={color} size={size} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Results"
+            component={ResultsScreen}
+            options={{
+              tabBarLabel: 'Results',
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="chart-bar" color={color} size={size} />
+              ),
+            }}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
     </PaperProvider>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  welcomeText: {
-    fontSize: 24,
-    color: theme.colors.accent,
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: theme.colors.primary,
-  },
-});
 
 export default App;

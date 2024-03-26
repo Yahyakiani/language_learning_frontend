@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, PermissionsAndroid, Platform } from 'react-native';
-import { Button, IconButton } from 'react-native-paper';
+import { Button } from 'react-native-paper';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import RNFS from 'react-native-fs'; // Add this for file system access
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 
-const AudioRecorderComponent = ({ currentSentence }) => {
+const AudioRecorderComponent = ({ currentSentence, navigation }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordPath, setRecordPath] = useState('');
   const [isReviewMode, setIsReviewMode] = useState(false);
@@ -85,7 +84,7 @@ const AudioRecorderComponent = ({ currentSentence }) => {
       original_text: currentSentence
     };
   
-    fetch('http://192.168.4.29:5000/process-audio-text', {
+    fetch('http://134.190.162.57:5000/process-audio-text', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -96,6 +95,7 @@ const AudioRecorderComponent = ({ currentSentence }) => {
     .then((responseData) => {
       console.log('Response:', responseData);
       // Handle the response data as needed
+      navigation.navigate('Results', { responseData });
     })
     .catch((error) => {
       console.error('Error:', error);
