@@ -84,7 +84,7 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
       original_text: currentSentence
     };
   
-    fetch('http://134.190.162.57:5000/process-audio-text', {
+    fetch('http://192.168.4.29:5000/process-audio-text', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
