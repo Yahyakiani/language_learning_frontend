@@ -24,7 +24,8 @@ const audioRecorderPlayer = new AudioRecorderPlayer();
 const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedWord, setSelectedWord] = useState("");
-  const [wordDetails, setWordDetails] = useState({ definition: "", partOfSpeech: "", synonyms: [], pronunciation: "" });
+  const [wordDetails, setWordDetails] = useState({ definition: "", partOfSpeech: "", synonyms: [], pronunciation: "",examples: [],
+  antonyms: [] });
 
   useEffect(() => {
     randomizeSentence();
@@ -43,18 +44,26 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
       const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
       const jsonData = await response.json();
       const wordData = jsonData[0];
+      console.log("Word details:", wordData);
   
       // Limiting phonetics and definitions to the first two entries
-      const limitedPhonetics = wordData?.phonetics?.slice(0, 2);
+      const limitedPhonetics = wordData?.phonetics?.slice(0, 1);
       const limitedMeanings = wordData?.meanings?.map(meaning => ({
         partOfSpeech: meaning?.partOfSpeech,
-        definitions: meaning?.definitions?.slice(0, 2) // Assuming each meaning has multiple definitions
+        definitions: meaning?.definitions?.slice(0, 1) // Assuming each meaning has multiple definitions
       }));
   
-      setWordDetails({
-        phonetics: limitedPhonetics,
-        meanings: limitedMeanings
-      });
+      // Extracting examples and antonyms
+    const examples = wordData?.meanings?.map(meaning => 
+      meaning?.definitions?.map(def => def.example).filter(ex => ex)).flat();
+    const antonyms = wordData?.meanings?.flatMap(meaning => meaning.antonyms);
+
+    setWordDetails({
+      phonetics: limitedPhonetics,
+      meanings: limitedMeanings,
+      examples: examples,
+      antonyms: antonyms
+    });
     } catch (error) {
       console.error("Failed to fetch word details:", error);
     }
@@ -86,7 +95,7 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
         ))}
       </View>
       <TouchableOpacity onPress={randomizeSentence} style={styles.iconButton}>
-        <Icon name="shuffle" size={30} />
+        <Icon name="shuffle" size={30} color="white" />
       </TouchableOpacity>
       <Modal
         animationType="slide"
@@ -100,21 +109,42 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
           <ScrollView style={styles.scrollView}>
             <Text style={styles.modalTextTitle}>{selectedWord.toUpperCase()}</Text>
             {wordDetails.meanings?.map((meaning, index) => (
-              <View key={index}>
+              <View key={index} style={styles.meaningContainer}>
                 <Text style={styles.modalText}>Part of Speech: {meaning.partOfSpeech}</Text>
                 {meaning.definitions?.map((def, idx) => (
-                  <Text key={idx} style={styles.modalText}>
-                    Definition: {def.definition}
-                    {def.example ? ` Example: ${def.example}` : ''}
-                  </Text>
+                  <View key={idx}>
+                    <Text style={styles.definitionText}>Definition: {def.definition}</Text>
+                    {def.example && (
+                      <Text style={styles.exampleText}>Example: {def.example}</Text>
+                    )}
+                  </View>
                 ))}
+                {meaning.antonyms?.length > 0 && (
+                  <View style={styles.antonymsContainer}>
+                    <Text style={styles.modalText}>Antonyms:</Text>
+                    <ScrollView horizontal={true}>
+                      {meaning.antonyms.map((antonym, idx) => (
+                        <View key={idx} style={styles.antonymBox}>
+                          <Text style={styles.antonymText}>{antonym}</Text>
+                        </View>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
             ))}
+
             {wordDetails.phonetics?.length > 0 && (
               <TouchableOpacity
                 style={styles.buttonPlay}
-                onPress={() => onPlayPronunciation(wordDetails.phonetics[0].audio)}>
-                <Text style={styles.modalText}>Play Pronunciation: {wordDetails.phonetics[0].text}</Text>
+                onPress={() => {
+                  onPlayPronunciation(wordDetails.phonetics[0].audio);
+                  this.isButtonDisabled = true; // Disable button after playing once
+                }}
+                disabled={this.isButtonDisabled}
+              >
+                <Icon name="volume-up" size={24} color="white" />
+                <Text style={styles.textStyle}>Play Pronunciation</Text>
               </TouchableOpacity>
             )}
           </ScrollView>
@@ -128,6 +158,7 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
       </Modal>
     </View>
   );
+  
   
 };
 
@@ -176,8 +207,29 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
   },
-  modalText: {
+  meaningContainer: {
+    marginTop: 5,
+    padding: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  definitionText: {
     marginBottom: 15,
+    textAlign: "center",
+    color: '#333',
+  },
+  buttonPlay: {
+    marginTop: 10,
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: '#4CAF50',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
     textAlign: "center"
   },
   buttonClose: {
@@ -186,20 +238,44 @@ const styles = StyleSheet.create({
     padding: 10,
     elevation: 2
   },
-  textStyle: {
-    color: "white",
-    fontWeight: "bold",
-    textAlign: "center"
-  },
-  buttonPlay: {
-    marginTop: 10,
+  meaningContainer: {
+    marginBottom: 10,
     padding: 10,
-    backgroundColor: '#4CAF50', // Green background for emphasis
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center'
+    backgroundColor: 'white',
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 5,
   },
-  
+  definitionText: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  exampleText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+    fontStyle: 'italic',
+  },
+  antonymsContainer: {
+    marginTop: 5,
+  },
+  antonymBox: {
+    marginRight: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: '#e0e0e0', // Light gray background
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  antonymText: {
+    color: '#333',
+    fontSize: 14,
+  },
 });
 
 export default SentenceDisplayComponent;

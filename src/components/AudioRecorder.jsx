@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, PermissionsAndroid, Platform } from 'react-native';
+import { View, PermissionsAndroid, Platform, Alert, Linking } from 'react-native';
 import { Button } from 'react-native-paper';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
-import RNFS from 'react-native-fs'; // Add this for file system access
+import RNFS from 'react-native-fs';
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 
@@ -12,10 +12,9 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
   const [isReviewMode, setIsReviewMode] = useState(false);
 
   useEffect(() => {
-    // Define the path for a temporary recording file
     const tempPath = Platform.select({
-      ios: `${RNFS.TemporaryDirectoryPath}hello.m4a`,
-      android: `${RNFS.TemporaryDirectoryPath}/hello.mp4`,
+      ios: `${RNFS.CachesDirectoryPath}/hello.m4a`,
+      android: `${RNFS.CachesDirectoryPath}/hello.mp4`,
     });
     setRecordPath(tempPath);
   }, []);
@@ -24,14 +23,26 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
     if (Platform.OS === 'android') {
       try {
         const grants = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
         ]);
 
-        return grants['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED &&
-               grants['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED &&
-               grants['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED;
+        console.log('Permissions granted:', grants);
+
+        if (
+          grants['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
+        ) {
+          return true;
+        } else {
+          Alert.alert(
+            'Permissions Denied',
+            'Microphone permission is denied. Please enable it in the app settings.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Open Settings', onPress: () => openSettings() },
+            ]
+          );
+          return false;
+        }
       } catch (err) {
         console.warn(err);
         return false;
@@ -40,8 +51,14 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
     return true;
   };
 
+  const openSettings = () => {
+    Linking.openSettings();
+  };
+
   const onStartRecord = async () => {
+    console.log('Starting recording');
     const permissionsGranted = await requestPermissions();
+    console.log('Permissions granted:', permissionsGranted);
     if (!permissionsGranted) return;
 
     const result = await audioRecorderPlayer.startRecorder(recordPath);
@@ -62,71 +79,96 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
   };
 
   const onPlayRecordedAudio = async () => {
-    const msg = await audioRecorderPlayer.startPlayer(recordPath);
-    audioRecorderPlayer.addPlayBackListener((e) => {
-      if (e.current_position === e.duration) {
-        console.log('finished playing');
-        audioRecorderPlayer.stopPlayer();
-      }
-    });
-    console.log(msg);
+    try {
+      console.log(`Playing audio from: ${recordPath}`);
+      await audioRecorderPlayer.stopPlayer(); // Ensure the player is stopped before starting it again
+      const msg = await audioRecorderPlayer.startPlayer(recordPath);
+      audioRecorderPlayer.addPlayBackListener((e) => {
+        if (e.current_position === e.duration) {
+          console.log('finished playing');
+          audioRecorderPlayer.stopPlayer();
+        }
+      });
+      console.log('Playback message:', msg);
+    } catch (error) {
+      console.error('Error playing audio:', error);
+    }
   };
 
   const onSendRecording = async () => {
-    console.log('Sending the recording');
-    
-    // Read the audio file as a base64-encoded string
-    const audioBase64 = await RNFS.readFile(recordPath, 'base64');
-    
-    // Prepare the data to be sent
-    let dataToSend = {
-      audio: audioBase64,
-      original_text: currentSentence
-    };
+    try {
+      console.log('Checking if file exists at:', recordPath);
+      const exists = await RNFS.exists(recordPath);
+      if (!exists) {
+        console.error('File does not exist:', recordPath);
+        return;
+      }
   
-    fetch('http://192.168.4.29:5000/process-audio-text', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dataToSend),
-    })
-    .then((response) => response.json())
-    .then((responseData) => {
-      console.log('Response:', responseData);
-      // Handle the response data as needed
-      navigation.navigate('Results', { responseData });
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
+      console.log('Reading file from path:', recordPath);
+      const audioBase64 = await RNFS.readFile(recordPath, 'base64');
+      console.log('File read successfully, size:', audioBase64.length);
   
-    // Optionally, reset states or perform clean-up tasks
-    setIsReviewMode(false);
+      let dataToSend = {
+        audio: audioBase64,
+        original_text: currentSentence,
+      };
+  
+      console.log('Sending data to server:', dataToSend);
+  
+      fetch('http://192.168.91.206:5000/process-audio-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSend),
+      })
+        .then((response) => {
+          console.log('Response status:', response.status);
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then((responseData) => {
+          console.log('Response data:', responseData);
+          navigation.navigate('Results', { responseData });
+        })
+        .catch((error) => {
+          console.error('Network request error:', error);
+        });
+  
+      setIsReviewMode(false);
+    } catch (error) {
+      console.error('Error sending recording:', error);
+    }
   };
   
+
   const onDiscardRecording = async () => {
-    // Optionally delete the temporary file
-    const exists = await RNFS.exists(recordPath);
-    if (exists) {
-      await RNFS.unlink(recordPath);
-      console.log('Temporary recording deleted');
+    try {
+      const exists = await RNFS.exists(recordPath);
+      if (exists) {
+        await RNFS.unlink(recordPath);
+        console.log('Temporary recording deleted');
+      }
+      setIsReviewMode(false);
+    } catch (error) {
+      console.error('Error discarding recording:', error);
     }
-    setIsReviewMode(false);
   };
 
   return (
-    <View >
-      
+    <View>
       {!isRecording && !isReviewMode && (
         <Button
           icon="record-circle"
           buttonColor="red"
-          textColor='white'
+          textColor="white"
           size={60}
           onPress={onStartRecord}
           style={{ margin: 10 }}
-        >  Start  Recording
+        >
+          Start Recording
         </Button>
       )}
       {isRecording && (
@@ -136,7 +178,8 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
           size={60}
           onPress={onStopRecord}
           style={{ margin: 10 }}
-        >  Stop Recording
+        >
+          Stop Recording
         </Button>
       )}
       {isReviewMode && (
@@ -147,7 +190,8 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
             size={60}
             onPress={onPlayRecordedAudio}
             style={{ margin: 10 }}
-          >  Replay Recording
+          >
+            Replay Recording
           </Button>
           <Button mode="contained" onPress={onSendRecording} style={{ margin: 10 }}>
             Send
@@ -158,7 +202,8 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
             size={60}
             onPress={onDiscardRecording}
             style={{ margin: 10 }}
-          >  Discard Recording
+          >
+            Discard Recording
           </Button>
         </>
       )}
