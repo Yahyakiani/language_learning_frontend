@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, Button, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
-import RNFS from 'react-native-fs';
 
 const sentences = [
   "An apple a day keeps the doctor away.",
@@ -24,8 +23,12 @@ const audioRecorderPlayer = new AudioRecorderPlayer();
 const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedWord, setSelectedWord] = useState("");
-  const [wordDetails, setWordDetails] = useState({ definition: "", partOfSpeech: "", synonyms: [], pronunciation: "",examples: [],
-  antonyms: [] });
+  const [wordDetails, setWordDetails] = useState({ 
+    phonetics: [], 
+    meanings: [], 
+    examples: [], 
+    antonyms: [] 
+  });
 
   useEffect(() => {
     randomizeSentence();
@@ -39,35 +42,111 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
     setCurrentSentence(sentences[randomIndex]);
   };
 
+  
   const fetchWordDetails = async (word) => {
     try {
-      const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-      const jsonData = await response.json();
-      const wordData = jsonData[0];
-      console.log("Word details:", wordData);
+      const dictionaryApiUrl = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
+      const linguaRobotApiUrl = `https://lingua-robot.p.rapidapi.com/language/v1/entries/en/${word}`;
   
-      // Limiting phonetics and definitions to the first two entries
-      const limitedPhonetics = wordData?.phonetics?.slice(0, 1);
-      const limitedMeanings = wordData?.meanings?.map(meaning => ({
-        partOfSpeech: meaning?.partOfSpeech,
-        definitions: meaning?.definitions?.slice(0, 1) // Assuming each meaning has multiple definitions
-      }));
+      let dictionaryData = [];
+      let linguaRobotData = {};
   
-      // Extracting examples and antonyms
-    const examples = wordData?.meanings?.map(meaning => 
-      meaning?.definitions?.map(def => def.example).filter(ex => ex)).flat();
-    const antonyms = wordData?.meanings?.flatMap(meaning => meaning.antonyms);
-
-    setWordDetails({
-      phonetics: limitedPhonetics,
-      meanings: limitedMeanings,
-      examples: examples,
-      antonyms: antonyms
-    });
+      // Fetch from Dictionary API
+      try {
+        const response = await fetch(dictionaryApiUrl);
+        dictionaryData = await response.json();
+        console.log("Dictionary API response:", dictionaryData);
+      } catch (error) {
+        console.error("Failed to fetch from Dictionary API:", error);
+      }
+  
+      // Fetch from Lingua Robot API
+      try {
+        const response = await fetch(linguaRobotApiUrl, {
+          method: 'GET',
+          headers: {
+            'x-rapidapi-host': 'lingua-robot.p.rapidapi.com',
+            'x-rapidapi-key': '511f7ad74dmsh92959ab2bd582fdp105cc0jsne53a5d087da5',
+          },
+        });
+        linguaRobotData = await response.json();
+        console.log("Lingua Robot API response:", linguaRobotData);
+      } catch (error) {
+        console.error("Failed to fetch from Lingua Robot API:", error);
+      }
+  
+      const combinedData = combineApiResponse([dictionaryData, linguaRobotData]);
+  
+      console.log("Combined API data:", combinedData);
+  
+      setWordDetails(combinedData);
     } catch (error) {
       console.error("Failed to fetch word details:", error);
     }
   };
+  const combineApiResponse = (data) => {
+    let phonetics = [];
+    let meanings = [];
+    let examples = [];
+    let antonyms = [];
+  
+    data.forEach(apiData => {
+      if (Array.isArray(apiData) && apiData[0]) {
+        // Handling data from Dictionary API
+        const dictionaryData = apiData[0];
+        console.log("Processing Dictionary API data:", dictionaryData);
+  
+        if (dictionaryData.phonetics) {
+          phonetics = phonetics.concat(dictionaryData.phonetics).slice(0, 2);
+        }
+  
+        if (dictionaryData.meanings) {
+          meanings = meanings.concat(dictionaryData.meanings.map(meaning => ({
+            partOfSpeech: meaning.partOfSpeech,
+            definitions: meaning.definitions ? meaning.definitions.slice(0, 2).map(def => ({
+              definition: def.definition,
+              example: def.example,
+            })) : [],
+            antonyms: meaning.antonyms ? meaning.antonyms.slice(0, 2) : [],
+          }))).slice(0, 2);
+  
+          examples = examples.concat(dictionaryData.meanings.flatMap(meaning => meaning.definitions ? meaning.definitions.map(def => def.example).filter(ex => ex) : [])).slice(0, 2);
+  
+          antonyms = antonyms.concat(dictionaryData.meanings.flatMap(meaning => meaning.antonyms ? meaning.antonyms : [])).slice(0, 2);
+        }
+      } else if (apiData.entries) {
+        // Handling data from Lingua Robot API
+        console.log("Processing Lingua Robot API data:", apiData);
+        apiData.entries.forEach(entry => {
+          if (entry.lexemes) {
+            phonetics = phonetics.concat(entry.lexemes.flatMap(lexeme => lexeme.phoneticTranscriptions ? lexeme.phoneticTranscriptions.map(pt => ({ text: pt.transcription, audio: pt.audio.url })) : [])).slice(0, 2);
+  
+            meanings = meanings.concat(entry.lexemes.map(lexeme => ({
+              partOfSpeech: lexeme.partOfSpeech,
+              definitions: lexeme.senses ? lexeme.senses.slice(0, 2).map(sense => ({
+                definition: sense.definition,
+                example: sense.usageExamples ? sense.usageExamples[0] : null,
+              })) : [],
+              antonyms: lexeme.senses ? lexeme.senses.flatMap(sense => sense.antonyms ? sense.antonyms.slice(0, 2) : []) : [],
+            }))).slice(0, 2);
+  
+            examples = examples.concat(entry.lexemes.flatMap(lexeme => lexeme.senses ? lexeme.senses.flatMap(sense => sense.usageExamples ? sense.usageExamples.slice(0, 2) : []) : [])).slice(0, 2);
+  
+            antonyms = antonyms.concat(entry.lexemes.flatMap(lexeme => lexeme.senses ? lexeme.senses.flatMap(sense => sense.antonyms ? sense.antonyms.slice(0, 2) : []) : [])).slice(0, 2);
+          }
+        });
+      }
+    });
+  
+    return {
+      phonetics: phonetics.slice(0, 2),
+      meanings: meanings.slice(0, 2),
+      examples: examples.slice(0, 2),
+      antonyms: antonyms.slice(0, 2),
+    };
+  };
+  
+  
   const onPlayPronunciation = async (audioUrl) => {
     const msg = await audioRecorderPlayer.startPlayer(audioUrl);
     audioRecorderPlayer.addPlayBackListener((e) => {
@@ -119,11 +198,11 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
                     )}
                   </View>
                 ))}
-                {meaning.antonyms?.length > 0 && (
+                {wordDetails.antonyms?.length > 0 && (
                   <View style={styles.antonymsContainer}>
                     <Text style={styles.modalText}>Antonyms:</Text>
                     <ScrollView horizontal={true}>
-                      {meaning.antonyms.map((antonym, idx) => (
+                      {wordDetails.antonyms.map((antonym, idx) => (
                         <View key={idx} style={styles.antonymBox}>
                           <Text style={styles.antonymText}>{antonym}</Text>
                         </View>
@@ -158,8 +237,6 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
       </Modal>
     </View>
   );
-  
-  
 };
 
 const styles = StyleSheet.create({
@@ -237,22 +314,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     elevation: 2
-  },
-  meaningContainer: {
-    marginBottom: 10,
-    padding: 10,
-    backgroundColor: 'white',
-    borderRadius: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  definitionText: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 5,
   },
   exampleText: {
     fontSize: 14,
