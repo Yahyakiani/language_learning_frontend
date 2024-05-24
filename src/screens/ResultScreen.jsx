@@ -3,12 +3,30 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Card, Title } from 'react-native-paper';
 
 const ResultsScreen = ({ route }) => {
-  const { responseData } = route.params;
+
+
+  const defaultResponseData = {
+    transcription: 'N/A',
+    readability_metrics: {
+      'N/A': {
+        'Metric 1': 'N/A',
+        'Metric 2': 'N/A',
+      },
+    },
+    word_complexities: {
+      'N/A': 'N/A',
+    },
+    levenshtein_distance: 'N/A',
+    missed_keywords: ['N/A'],
+    new_keywords: ['N/A'],
+  };
+
+  const { responseData = defaultResponseData } = route.params || {};
 
   return (
     <ScrollView style={styles.container}>
       <Card style={styles.card}>
-        <Card.Content>
+        <Card.Content>  
           <Title style={styles.title}>Transcription</Title>
           <Text>{responseData?.transcription}</Text>
         </Card.Content>
