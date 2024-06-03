@@ -1,10 +1,11 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, StyleSheet, Text, View, ImageBackground } from 'react-native';
 import { Card, Title } from 'react-native-paper';
+import * as Animatable from 'react-native-animatable';
+import LottieView from 'lottie-react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 const ResultsScreen = ({ route }) => {
-
-
   const defaultResponseData = {
     transcription: 'N/A',
     readability_metrics: {
@@ -22,95 +23,147 @@ const ResultsScreen = ({ route }) => {
   };
 
   const { responseData = defaultResponseData } = route.params || {};
+  const [animate, setAnimate] = useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setAnimate(true);
+      return () => setAnimate(false);
+    }, [])
+  );
 
   return (
-    <ScrollView style={styles.container}>
-      <Card style={styles.card}>
-        <Card.Content>  
-          <Title style={styles.title}>Transcription</Title>
-          <Text>{responseData?.transcription}</Text>
-        </Card.Content>
-      </Card>
+    <ImageBackground
+      source={require('../../assets/animations/colorful-background.json')}
+      style={styles.background}
+    >
+      <LottieView
+        source={require('../../assets/animations/colorful-background.json')}
+        autoPlay
+        loop
+        style={styles.lottie}
+      />
+      <ScrollView contentContainerStyle={styles.container}>
+        {animate && (
+          <>
+            <Animatable.View animation="fadeInUp" style={styles.header}>
+              <Text style={styles.headerText}>Analysis Results</Text>
+            </Animatable.View>
 
-      {/* Render Readability Metrics */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Title style={styles.title}>Readability Metrics</Title>
-          {Object.entries(responseData?.readability_metrics).map(([sentence, metrics]) => (
-            <>
-              <Text style={styles.sentence}>{sentence}</Text>
-              {Object.entries(metrics).map(([metric, value]) => (
-                <Text key={metric}>{`${metric}: ${value}`}</Text>
-              ))}
-            </>
-          ))}
-        </Card.Content>
-      </Card>
+            <Animatable.View animation="fadeInUp" delay={100} style={styles.cardContainer}>
+              <Card style={styles.card}>
+                <Card.Content>
+                  <Title style={styles.title}>Transcription</Title>
+                  <Text style={styles.contentText}>{responseData?.transcription}</Text>
+                </Card.Content>
+              </Card>
+            </Animatable.View>
 
-      {/* Render Word Complexities */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Title style={styles.title}>Word Complexities</Title>
-          {Object.entries(responseData?.word_complexities).map(([word, complexity]) => (
-            <Text key={word}>{`${word}: ${complexity}`}</Text>
-          ))}
-        </Card.Content>
-      </Card>
+            <Animatable.View animation="fadeInUp" delay={200} style={styles.cardContainer}>
+              <Card style={styles.card}>
+                <Card.Content>
+                  <Title style={styles.title}>Readability Metrics</Title>
+                  {Object.entries(responseData?.readability_metrics).map(([sentence, metrics]) => (
+                    <View key={sentence} style={styles.metricContainer}>
+                      <Text style={styles.sentence}>{sentence}</Text>
+                      {Object.entries(metrics).map(([metric, value]) => (
+                        <Text key={metric} style={styles.contentText}>{`${metric}: ${value}`}</Text>
+                      ))}
+                    </View>
+                  ))}
+                </Card.Content>
+              </Card>
+            </Animatable.View>
 
-      {/* Additional Information: Levenshtein Distance, Missed and New Keywords */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Title style={styles.title}>Additional Information</Title>
-          <Text>Levenshtein Distance: {responseData?.levenshtein_distance}</Text>
-          <Text>Missed Keywords: {responseData?.missed_keywords.join(", ")}</Text>
-          <Text>New Keywords: {responseData?.new_keywords.join(", ")}</Text>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+            <Animatable.View animation="fadeInUp" delay={300} style={styles.cardContainer}>
+              <Card style={styles.card}>
+                <Card.Content>
+                  <Title style={styles.title}>Word Complexities</Title>
+                  {Object.entries(responseData?.word_complexities).map(([word, complexity]) => (
+                    <Text key={word} style={styles.contentText}>{`${word}: ${complexity}`}</Text>
+                  ))}
+                </Card.Content>
+              </Card>
+            </Animatable.View>
+
+            <Animatable.View animation="fadeInUp" delay={400} style={styles.cardContainer}>
+              <Card style={styles.card}>
+                <Card.Content>
+                  <Title style={styles.title}>Additional Information</Title>
+                  <Text style={styles.contentText}>Levenshtein Distance: {responseData?.levenshtein_distance}</Text>
+                  <Text style={styles.contentText}>Missed Keywords: {responseData?.missed_keywords.join(", ")}</Text>
+                  <Text style={styles.contentText}>New Keywords: {responseData?.new_keywords.join(", ")}</Text>
+                </Card.Content>
+              </Card>
+            </Animatable.View>
+          </>
+        )}
+      </ScrollView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    backgroundColor: '#f0f0f5', // Light background color
-    color: '#333', // Darker text for readability
+    resizeMode: 'cover',
   },
-  card: {
-    backgroundColor: '#ffffff', // Cards with white background
-    borderRadius: 20, // Rounded corners for the cards
-    padding: 15,
-    elevation: 4, // Shadow for Android
-    shadowColor: '#000', // Shadow for iOS
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    marginHorizontal: 10,
+  lottie: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: -1,
+  },
+  container: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    paddingBottom: 80, // To prevent content from being hidden by bottom tabs
+  },
+  header: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  headerText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 10,
+  },
+  cardContainer: {
+    width: '100%',
     marginBottom: 20,
   },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 15,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+  },
   title: {
-    fontSize: 20,
-    color: '#3143e8', // Fun and engaging color for the titles
+    fontSize: 22,
+    color: '#3143e8',
     fontWeight: 'bold',
     marginBottom: 10,
   },
   contentText: {
-    fontSize: 16,
-    color: '#333', // Darker text for readability
-    lineHeight: 24, // Line height for better readability
+    fontSize: 18,
+    color: '#333',
+    lineHeight: 24,
   },
   sentence: {
     fontWeight: 'bold',
-    color: '#e91e63', // A playful color for sentences
+    color: '#e91e63',
     marginBottom: 5,
   },
-  title: {
-    color: 'black',
+  metricContainer: {
+    marginBottom: 10,
   },
 });
-
 
 export default ResultsScreen;
