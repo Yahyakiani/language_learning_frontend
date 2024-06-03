@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   word: {
-    fontSize: 16,
+    fontSize: 20,
     color: '#6210EE',
     marginRight: 4,
   },

@@ -1,14 +1,61 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import * as Animatable from 'react-native-animatable';
+import LottieView from 'lottie-react-native';
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Welcome to the Reading Learning App!</Text>
-      <Image
-        style={styles.image}
-        source={{ uri: 'https://play-lh.googleusercontent.com/51WYc0ZPB34cGDB8MCkDc0ymv6iBf0r-kSZV_H5pXVDHvdVCA12TWUWQtS54zg-RodI' }}
+      <LottieView
+        source={require('../../assets/animations/colorful-background.json')}
+        autoPlay
+        loop
+        style={styles.background}
       />
+      <Animatable.View animation="fadeIn" style={styles.content}>
+        <Animatable.Text animation="bounceIn" style={styles.text}>
+          Welcome to the Reading Learning App!
+        </Animatable.Text>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Record')}
+        >
+          <Animatable.Image
+            animation="pulse"
+            iterationCount="infinite"
+            style={styles.icon}
+            source={require('../../assets/images/microphone.png')}
+          />
+          <Text style={styles.buttonText}>Record</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Word')}
+        >
+          <Animatable.Image
+            animation="pulse"
+            iterationCount="infinite"
+            style={styles.icon}
+            source={require('../../assets/images/word.png')}
+          />
+          <Text style={styles.buttonText}>Learn Words</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Documents')}
+        >
+          <Animatable.Image
+            animation="pulse"
+            iterationCount="infinite"
+            style={styles.icon}
+            source={require('../../assets/images/document.png')}
+          />
+          <Text style={styles.buttonText}>Documents</Text>
+        </TouchableOpacity>
+      </Animatable.View>
     </View>
   );
 };
@@ -19,14 +66,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  text: {
-    fontSize: 24,
-    marginBottom: 20,
+  background: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: -1,
   },
-  image: {
-    width: 200,
-    height: 200,
-    borderRadius: 100, // Makes it circular
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  text: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 10,
+    marginBottom: 40,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6200EE',
+    padding: 10,
+    margin: 10,
+    borderRadius: 20,
+    width: 250,
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    marginLeft: 10,
+  },
+  icon: {
+    width: 40,
+    height: 40,
   },
 });
 
