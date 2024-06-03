@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 
@@ -30,6 +30,7 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
     antonyms: [] 
   });
 
+  const [wordImage, setWordImage] = useState(null);
   useEffect(() => {
     randomizeSentence();
   }, []);
@@ -145,7 +146,30 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
       antonyms: antonyms.slice(0, 2),
     };
   };
+
   
+  const fetchImage = async (word) => {
+    const unsplashApiUrl = `https://api.unsplash.com/search/photos?page=1&query=${word}&client_id=2aIcjC6rcF41C9mbzIV-AFsWUdElDp6H4kxoC9pluyM`;
+
+    try {
+      const response = await fetch(unsplashApiUrl);
+      const jsonData = await response.json();
+      console.log("Unsplash API response:", jsonData);
+
+      if (jsonData.results && jsonData.results.length > 0) {
+        const imageUrl = jsonData.results[0].urls.small;
+        console.log("Image URL:", imageUrl);
+        return imageUrl;
+      } else {
+        console.log("No image found");
+        return null;
+      }
+    } catch (error) {
+      console.error("Failed to fetch image:", error);
+      return null;
+    }
+  };
+
   
   const onPlayPronunciation = async (audioUrl) => {
     const msg = await audioRecorderPlayer.startPlayer(audioUrl);
@@ -158,9 +182,11 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
     console.log(msg);
   };
 
-  const handleWordPress = (word) => {
+  const handleWordPress = async (word) => {
     setSelectedWord(word);
-    fetchWordDetails(word);
+    await fetchWordDetails(word); // Assuming this function exists
+    const imageUrl = await fetchImage(word);
+    setWordImage(imageUrl);
     setModalVisible(true);
   };
 
@@ -187,6 +213,10 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
         <View style={styles.modalView}>
           <ScrollView style={styles.scrollView}>
             <Text style={styles.modalTextTitle}>{selectedWord.toUpperCase()}</Text>
+
+            {wordImage && (
+              <Image source={{ uri: wordImage }} style={styles.wordImage} />
+            )}
             {wordDetails.meanings?.map((meaning, index) => (
               <View key={index} style={styles.meaningContainer}>
                 <Text style={styles.modalText}>Part of Speech: {meaning.partOfSpeech}</Text>
@@ -218,7 +248,7 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
                 style={styles.buttonPlay}
                 onPress={() => {
                   onPlayPronunciation(wordDetails.phonetics[0].audio);
-                  this.isButtonDisabled = true; // Disable button after playing once
+                  // this.isButtonDisabled = true; // Disable button after playing once
                 }}
                 disabled={this.isButtonDisabled}
               >
@@ -249,6 +279,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginRight: 10,
+  },
+  wordImage: {
+    width: 300,
+    height: 300,
+    marginBottom: 20,
   },
   word: {
     fontSize: 16,
