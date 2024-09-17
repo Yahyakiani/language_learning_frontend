@@ -7,6 +7,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import HomeScreen from './screens/HomeScreen';
 import RecordScreen from './screens/RecordScreen';
 import ResultsScreen from './screens/ResultScreen';
+import VocabularyScreen from './screens/VocabularyScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -47,6 +48,16 @@ const App = () => {
               tabBarLabel: 'Results',
               tabBarIcon: ({ color, size }) => (
                 <Icon name="chart-bar" color={color} size={size} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Vocabulary"
+            component={VocabularyScreen}
+            options={{
+              tabBarLabel: 'Vocabulary',
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="book-open-page-variant" color={color} size={size} />
               ),
             }}
           />

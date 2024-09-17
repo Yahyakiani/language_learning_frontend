@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import LottieView from 'lottie-react-native';
 
@@ -32,7 +32,7 @@ const HomeScreen = ({ navigation }) => {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Word')}
+          onPress={() => navigation.navigate('Vocabulary')}
         >
           <Animatable.Image
             animation="pulse"
@@ -68,6 +68,8 @@ const styles = StyleSheet.create({
   },
   background: {
     ...StyleSheet.absoluteFillObject,
+    width: Dimensions.get('window').width, // Ensure the background covers the full width
+    height: Dimensions.get('window').height,
     zIndex: -1,
   },
   content: {
