@@ -60,7 +60,61 @@ const VocabularyScreen = () => {
             example: 'He was candid about his mistakes.',
             category: 'Basic',
         },
-        // Add more words as needed
+        {
+            id: 3,
+            word: 'Apple',
+            meaning: 'A round fruit with red or green skin and a sweet taste.',
+            options: [
+                'A large wild animal',
+                'A type of vehicle',
+                'A round fruit with red or green skin and a sweet taste.',
+                'A place to live',
+            ],
+            level: 1, // Difficulty level
+            correct: false,
+            image: require('../../assets/images/apple.png'), // Add relevant images
+            synonyms: ['Fruit', 'Snack'],
+            antonyms: ['Vegetable', 'Meat'],
+            example: 'She ate an apple for a snack.',
+            category: 'Basic',
+        },
+        {
+            id: 4,
+            word: 'Dog',
+            meaning: 'A common animal kept as a pet, known for barking.',
+            options: [
+                'A kind of bird',
+                'A common animal kept as a pet, known for barking.',
+                'A type of tree',
+                'A large fish',
+            ],
+            level: 1,
+            correct: false,
+            image: require('../../assets/images/dog.png'),
+            synonyms: ['Puppy', 'Canine'],
+            antonyms: ['Cat', 'Kitten'],
+            example: 'The dog ran around the park.',
+            category: 'Basic',
+        }
+        ,
+        {
+            id: 5,
+            word: 'Car',
+            meaning: 'A vehicle with four wheels used for transporting people.',
+            options: [
+                'A type of fruit',
+                'A vehicle with four wheels used for transporting people.',
+                'A type of toy',
+                'A place to sleep',
+            ],
+            level: 1,
+            correct: false,
+            image: require('../../assets/images/car.jpg'),
+            synonyms: ['Vehicle', 'Automobile'],
+            antonyms: ['Bicycle', 'Truck'],
+            example: 'They drove the car to the beach.',
+            category: 'Basic',
+        },
     ];
 
     const [vocabulary, setVocabulary] = useState(initialVocabulary);

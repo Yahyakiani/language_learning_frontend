@@ -4,51 +4,56 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import useWordDetails from '../hooks/useWordDetails';
 import WordDetailsModal from './WordDetails';
 
-const sentences = [
-  "An apple a day keeps the doctor away.",
-  "Better late than never.",
-  "Actions speak louder than words.",
-  "The early bird catches the worm.",
-  "The pen is mightier than the sword.",
-  "When in Rome, do as the Romans do.",
-  "When the going gets tough, the tough get going.",
-  "A picture is worth a thousand words.",
-  "Don't put all your eggs in one basket.",
-  "Don't count your chickens before they hatch.",
-  "Don't cry over spilled milk.",
-  "Don't bite the hand that feeds you.",
-  "Don't judge a book by its cover.",
+const paragraphs = [
+  "Once upon a time, in a land far away, there lived a young princess who loved to explore the forests around her castle. She would spend hours wandering among the trees, listening to the birds sing and watching the squirrels play.",
+  "One sunny day, she found a small, sparkling stone on the ground. Curious, she picked it up and held it to the light. The stone began to glow, and suddenly, a tiny fairy appeared before her, thanking her for finding the lost magical gem.",
+  "The princess and the fairy became friends, and together they embarked on many adventures, discovering hidden treasures and learning the secrets of the enchanted forest."
 ];
 
-const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
+const wordDetailsData = {
+  'princess': {
+    meaning: 'A daughter of a monarch.',
+    pronunciation: 'prin-sess',
+    image: 'https://example.com/image-of-princess.jpg',
+  },
+  'forest': {
+    meaning: 'A large area covered chiefly with trees and undergrowth.',
+    pronunciation: 'for-est',
+    image: 'https://example.com/image-of-forest.jpg',
+  },
+  // Add more words as needed
+};
+
+const SentenceDisplayComponent = ({ currentParagraph, setCurrentParagraph }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedWord, setSelectedWord] = useState("");
 
-  const { wordDetails, wordImage, playPronunciation } = useWordDetails(selectedWord);
+  const { wordDetails, wordImage, playPronunciation } = useWordDetails(selectedWord, wordDetailsData);
 
-  const randomizeSentence = () => {
+  const randomizeParagraph = () => {
     let randomIndex;
     do {
-      randomIndex = Math.floor(Math.random() * sentences.length);
-    } while (sentences[randomIndex] === currentSentence);
-    setCurrentSentence(sentences[randomIndex]);
+      randomIndex = Math.floor(Math.random() * paragraphs.length);
+    } while (paragraphs[randomIndex] === currentParagraph);
+    setCurrentParagraph(paragraphs[randomIndex]);
   };
 
   const handleWordPress = (word) => {
-    setSelectedWord(word);
+    const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '');
+    setSelectedWord(cleanWord);
     setModalVisible(true);
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.sentenceContainer}>
-        {currentSentence.split(" ").map((word, index) => (
+      <View style={styles.paragraphContainer}>
+        {currentParagraph.split(' ').map((word, index) => (
           <Text key={index} style={styles.word} onPress={() => handleWordPress(word)}>
-            {word + (index < currentSentence.split(" ").length - 1 ? ' ' : '')}
+            {word + ' '}
           </Text>
         ))}
       </View>
-      <TouchableOpacity onPress={randomizeSentence} style={styles.iconButton}>
+      <TouchableOpacity onPress={randomizeParagraph} style={styles.iconButton}>
         <Icon name="shuffle" size={30} color="white" />
       </TouchableOpacity>
 
@@ -66,26 +71,25 @@ const SentenceDisplayComponent = ({ currentSentence, setCurrentSentence }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
   },
-  sentenceContainer: {
+  paragraphContainer: {
     flexDirection: 'row',
-    marginRight: 10,
-    fontWeight: 'bold',
-    fontSize: 26,
+    flexWrap: 'wrap',
+    margin: 10,
   },
   word: {
-    fontSize: 26,
-    color: 'black',
+    fontSize: 20,
+    color: '#1E90FF',
     marginRight: 4,
     fontWeight: 'bold',
   },
   iconButton: {
     padding: 10,
-    backgroundColor: '#6200EE',
+    backgroundColor: '#FFA500',
     borderRadius: 50,
+    marginTop: 10,
   },
 });
 

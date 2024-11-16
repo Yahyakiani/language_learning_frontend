@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, View, ImageBackground } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, View, ImageBackground, Dimensions } from 'react-native';
 import { Card, Title } from 'react-native-paper';
 import * as Animatable from 'react-native-animatable';
 import LottieView from 'lottie-react-native';
@@ -33,10 +33,8 @@ const ResultsScreen = ({ route }) => {
   );
 
   return (
-    <ImageBackground
-      source={require('../../assets/animations/colorful-background.json')}
-      style={styles.background}
-    >
+    <View style={styles.background}>
+    
       <LottieView
         source={require('../../assets/animations/colorful-background.json')}
         autoPlay
@@ -99,13 +97,15 @@ const ResultsScreen = ({ route }) => {
           </>
         )}
       </ScrollView>
-    </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   background: {
     flex: 1,
+    width: Dimensions.get('window').width, // Ensure the background covers the full width
+    height: Dimensions.get('window').height, // Ensure the background covers the full height
     resizeMode: 'cover',
   },
   lottie: {

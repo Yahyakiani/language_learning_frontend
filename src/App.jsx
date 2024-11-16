@@ -8,6 +8,7 @@ import HomeScreen from './screens/HomeScreen';
 import RecordScreen from './screens/RecordScreen';
 import ResultsScreen from './screens/ResultScreen';
 import VocabularyScreen from './screens/VocabularyScreen';
+import PronunciationScreen from './screens/PronunciationScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -56,6 +57,16 @@ const App = () => {
             component={VocabularyScreen}
             options={{
               tabBarLabel: 'Vocabulary',
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="book-open-page-variant" color={color} size={size} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Pronunciation"
+            component={PronunciationScreen}
+            options={{
+              tabBarLabel: 'Pronunciation',
               tabBarIcon: ({ color, size }) => (
                 <Icon name="book-open-page-variant" color={color} size={size} />
               ),

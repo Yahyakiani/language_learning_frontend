@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, PermissionsAndroid, Platform, Alert, Linking } from 'react-native';
+import { View, PermissionsAndroid, Platform, Alert, Linking, StyleSheet } from 'react-native';
 import { Button } from 'react-native-paper';
 import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 import RNFS from 'react-native-fs';
 
 const audioRecorderPlayer = new AudioRecorderPlayer();
 
-const AudioRecorderComponent = ({ currentSentence, navigation }) => {
+const AudioRecorderComponent = ({ currentText, navigation }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordPath, setRecordPath] = useState('');
   const [isReviewMode, setIsReviewMode] = useState(false);
@@ -25,8 +25,6 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
         const grants = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
         ]);
-
-        console.log('Permissions granted:', grants);
 
         if (
           grants['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
@@ -56,16 +54,13 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
   };
 
   const onStartRecord = async () => {
-    console.log('Starting recording');
     const permissionsGranted = await requestPermissions();
-    console.log('Permissions granted:', permissionsGranted);
     if (!permissionsGranted) return;
 
     const result = await audioRecorderPlayer.startRecorder(recordPath);
     audioRecorderPlayer.addRecordBackListener((e) => {
-      console.log('recording', e);
+      // Update UI if needed
     });
-    console.log(result);
     setIsRecording(true);
     setIsReviewMode(false);
   };
@@ -75,21 +70,17 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
     audioRecorderPlayer.removeRecordBackListener();
     setIsRecording(false);
     setIsReviewMode(true);
-    console.log(result);
   };
 
   const onPlayRecordedAudio = async () => {
     try {
-      console.log(`Playing audio from: ${recordPath}`);
-      await audioRecorderPlayer.stopPlayer(); // Ensure the player is stopped before starting it again
+      await audioRecorderPlayer.stopPlayer();
       const msg = await audioRecorderPlayer.startPlayer(recordPath);
       audioRecorderPlayer.addPlayBackListener((e) => {
         if (e.current_position === e.duration) {
-          console.log('finished playing');
           audioRecorderPlayer.stopPlayer();
         }
       });
-      console.log('Playback message:', msg);
     } catch (error) {
       console.error('Error playing audio:', error);
     }
@@ -97,24 +88,19 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
 
   const onSendRecording = async () => {
     try {
-      console.log('Checking if file exists at:', recordPath);
       const exists = await RNFS.exists(recordPath);
       if (!exists) {
         console.error('File does not exist:', recordPath);
         return;
       }
-  
-      console.log('Reading file from path:', recordPath);
+
       const audioBase64 = await RNFS.readFile(recordPath, 'base64');
-      console.log('File read successfully, size:', audioBase64.length);
-  
+
       let dataToSend = {
         audio: audioBase64,
-        original_text: currentSentence,
+        original_text: currentText,
       };
-  
-      console.log('Sending data to server:', dataToSend);
-  
+
       fetch('http://192.168.91.206:5000/process-audio-text', {
         method: 'POST',
         headers: {
@@ -123,33 +109,29 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
         body: JSON.stringify(dataToSend),
       })
         .then((response) => {
-          console.log('Response status:', response.status);
           if (!response.ok) {
             throw new Error('Network response was not ok');
           }
           return response.json();
         })
         .then((responseData) => {
-          console.log('Response data:', responseData);
           navigation.navigate('Results', { responseData });
         })
         .catch((error) => {
           console.error('Network request error:', error);
         });
-  
+
       setIsReviewMode(false);
     } catch (error) {
       console.error('Error sending recording:', error);
     }
   };
-  
 
   const onDiscardRecording = async () => {
     try {
       const exists = await RNFS.exists(recordPath);
       if (exists) {
         await RNFS.unlink(recordPath);
-        console.log('Temporary recording deleted');
       }
       setIsReviewMode(false);
     } catch (error) {
@@ -158,26 +140,25 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
   };
 
   return (
-    <View>
+    <View style={styles.container}>
       {!isRecording && !isReviewMode && (
         <Button
-          icon="record-circle"
-          buttonColor="red"
-          textColor="white"
-          size={60}
+          icon="microphone"
+          mode="contained"
           onPress={onStartRecord}
-          style={{ margin: 10 }}
+          style={styles.startButton}
+          labelStyle={{ fontSize: 18 }}
         >
           Start Recording
         </Button>
       )}
       {isRecording && (
         <Button
-          icon="stop-circle-outline"
-          buttonColor="black"
-          size={60}
+          icon="stop"
+          mode="contained"
           onPress={onStopRecord}
-          style={{ margin: 10 }}
+          style={styles.stopButton}
+          labelStyle={{ fontSize: 18 }}
         >
           Stop Recording
         </Button>
@@ -185,23 +166,29 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
       {isReviewMode && (
         <>
           <Button
-            icon="play-circle-outline"
-            buttonColor="green"
-            size={60}
+            icon="play"
+            mode="contained"
             onPress={onPlayRecordedAudio}
-            style={{ margin: 10 }}
+            style={styles.playButton}
+            labelStyle={{ fontSize: 18 }}
           >
             Replay Recording
           </Button>
-          <Button mode="contained" onPress={onSendRecording} style={{ margin: 10 }}>
+          <Button
+            icon="send"
+            mode="contained"
+            onPress={onSendRecording}
+            style={styles.sendButton}
+            labelStyle={{ fontSize: 18 }}
+          >
             Send
           </Button>
           <Button
-            icon="delete-circle-outline"
-            buttonColor="grey"
-            size={60}
+            icon="delete"
+            mode="contained"
             onPress={onDiscardRecording}
-            style={{ margin: 10 }}
+            style={styles.discardButton}
+            labelStyle={{ fontSize: 18 }}
           >
             Discard Recording
           </Button>
@@ -210,5 +197,36 @@ const AudioRecorderComponent = ({ currentSentence, navigation }) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+  },
+  startButton: {
+    backgroundColor: '#32CD32',
+    margin: 10,
+    width: 200,
+  },
+  stopButton: {
+    backgroundColor: '#FF0000',
+    margin: 10,
+    width: 200,
+  },
+  playButton: {
+    backgroundColor: '#1E90FF',
+    margin: 10,
+    width: 200,
+  },
+  sendButton: {
+    backgroundColor: '#FFA500',
+    margin: 10,
+    width: 200,
+  },
+  discardButton: {
+    backgroundColor: '#808080',
+    margin: 10,
+    width: 200,
+  },
+});
 
 export default AudioRecorderComponent;

@@ -45,7 +45,7 @@ const HomeScreen = ({ navigation }) => {
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Documents')}
+          onPress={() => navigation.navigate('Pronunciation')}
         >
           <Animatable.Image
             animation="pulse"
@@ -53,7 +53,7 @@ const HomeScreen = ({ navigation }) => {
             style={styles.icon}
             source={require('../../assets/images/document.png')}
           />
-          <Text style={styles.buttonText}>Documents</Text>
+          <Text style={styles.buttonText}>Pronunciation</Text>
         </TouchableOpacity>
       </Animatable.View>
     </View>
