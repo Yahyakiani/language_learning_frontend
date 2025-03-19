@@ -1,79 +1,176 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Reading Companion App (Frontend)
 
-# Getting Started
+## Overview
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+The Reading Companion App is the mobile frontend for the Reading Companion System — an interactive learning tool designed to improve vocabulary, pronunciation, and reading comprehension for children aged 6–12. Built with React Native, this cross‑platform application communicates with a backend API to provide real‑time transcription, adaptive vocabulary exercises, and phonetic pronunciation feedback.
 
-## Step 1: Start the Metro Server
+---
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## Table of Contents
 
-To start Metro, run the following command from the _root_ of your React Native project:
+- [Installation](#installation)  
+- [Configuration](#configuration)  
+- [Running the App](#running-the-app)  
+- [UI Overview](#ui-overview)  
+  - [Home Screen](#home-screen)  
+  - [Vocabulary Assessment](#vocabulary-assessment)  
+  - [Progressive Difficulty](#progressive-difficulty)  
+  - [Immediate Feedback](#immediate-feedback)  
+  - [Phonetic Breakdown](#phonetic-breakdown)  
+  - [Phonetic Feedback](#phonetic-feedback)  
+  - [Adaptive Pronunciation Practice](#adaptive-pronunciation-practice)  
+- [Backend Integration](#backend-integration)  
+- [Project Structure](#project-structure)  
+- [Contributing](#contributing)  
+- [License](#license)  
 
-```bash
-# using npm
-npm start
+---
 
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Start your Application
-
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
-
-### For Android
-
-```bash
-# using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### For iOS
+## Installation
 
 ```bash
-# using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+git clone https://github.com/<username>/reading-companion-frontend.git
+cd reading-companion-frontend
+npm install
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+## Configuration
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+Create a `.env` file in the project root with:
 
-## Step 3: Modifying your App
+```env
+BACKEND_URL=https://api.yourdomain.com
+```
 
-Now that you have successfully run the app, let's modify it.
+## Running the App
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+**iOS:**
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+```bash
+npx react-native run-ios
+```
 
-## Congratulations! :tada:
+**Android:**
 
-You've successfully run and modified your React Native App. :partying_face:
+```bash
+npx react-native run-android
+```
 
-### Now what?
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+## UI Overview
 
-# Troubleshooting
+Each section below includes a screenshot (`assets/images/`) and a brief description of its functionality.
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+---
 
-# Learn More
+### Home Screen
 
-To learn more about React Native, take a look at the following resources:
+![Home Screen](assets/images/home.png)  
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+The **Home** screen provides easy access to main functions:
+
+- **Record:** Quickly record audio for pronunciation practice.
+- **Learn Words:** Begin a vocabulary assessment to test and build your knowledge.
+- **Pronunciation:** Start interactive phonetic practice sessions.
+
+Navigation tabs at the bottom allow easy switching between **Home**, **Record**, **Results**, **Vocabulary**, and **Pronunciation** screens.
+
+---
+
+### Vocabulary Assessment
+
+![Vocabulary Assessment](assets/images/vocab.png)
+
+The initial vocabulary assessment establishes a user's baseline proficiency through a series of multiple-choice questions. Users select the definition they think is correct, then submit their answers to receive immediate feedback.
+
+---
+
+### Progressive Difficulty
+
+![Progressive Difficulty](assets/images/vocab1.png)
+
+The app dynamically adjusts the vocabulary difficulty based on user performance. Correct answers result in increasingly challenging words, while incorrect responses adjust the difficulty to ensure effective learning.
+
+---
+
+### Immediate Feedback
+
+![Immediate Feedback Example 1](assets/images/v1.png)  
+![Immediate Feedback Example 2](assets/images/v3.png)
+
+When a user answers incorrectly, the app immediately provides the correct definition along with synonyms, antonyms, and usage examples. This helps reinforce learning through direct feedback and examples.
+
+---
+
+### Phonetic Breakdown
+
+![Phonetic Breakdown](assets/images/p1.png)
+
+The phonetic breakdown guides pronunciation practice by visually segmenting words into phonetic parts. Users see clear syllable separation and are encouraged to pronounce each segment distinctly.
+
+---
+
+### Phonetic Feedback
+
+![Phonetic Feedback Example 1](assets/images/p2.png)  
+![Phonetic Feedback Example 2](assets/images/p4.png)  
+![Phonetic Feedback Example 3](assets/images/c1.png)
+
+After users record pronunciation, the app highlights segments to indicate accuracy:
+
+- **Green:** Correct pronunciation
+- **Yellow:** Close but needs improvement
+- **Red:** Incorrect pronunciation
+
+Users have options to replay correct pronunciation segments, making it easy to pinpoint and practice problem areas.
+
+---
+
+
+### Adaptive Pronunciation Practice
+
+Allows segment-by-segment replay and repeated practice with supportive prompts.
+
+## Backend Integration
+
+The frontend communicates with the backend REST API to send audio recordings and receive analysis results.
+
+| Endpoint       | Method | Request Body                             | Response                                | Description                               |
+|----------------|--------|------------------------------------------|-----------------------------------------|-------------------------------------------|
+| `/api/audio`   | POST   | `{ audio: <base64 string>, userId? }`    | `{ transcription, metrics, feedback }`  | Upload audio for transcription and feedback |
+| `/api/results` | GET    | `?userId=<id>`                            | `{ history: [...results] }`             | Retrieve past session results             |
+
+**Workflow:**
+
+- User taps **Record** → speaks into microphone → audio converted to base64.
+- Frontend sends **POST** to `/api/audio`.
+- Backend returns JSON containing transcription, word complexity suggestions, readability metrics, and phonetic feedback.
+- Frontend displays results on the **Results** screen, showing highlighted errors, metrics, and next-word suggestions.
+
+## Project Structure
+
+```text
+/src
+├── assets/images        # UI screenshots and icons
+├── components           # Reusable UI components
+├── navigation           # Tab-based navigation setup
+├── screens              # Home, Record, Results screens
+├── services             # API request functions
+└── utils                # Helper functions (audio encoding, formatters)
+```
+
+## Contributing
+
+Contributions welcome! Please fork the repo, create a feature branch, and submit a pull request. Follow existing coding conventions and ensure linting passes.
+
+## License
+
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+
+
+Contributing
+
+Contributions welcome! Please fork the repo, create a feature branch, and submit a pull request. Follow existing coding conventions and ensure linting passes.
+License
+
+This project is licensed under the MIT License — see LICENSE for details.
